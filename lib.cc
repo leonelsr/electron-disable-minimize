@@ -32,19 +32,19 @@ NAN_METHOD(DisableMinimize)
         info.GetReturnValue().Set(Nan::False());
         return;
     }
+
     unsigned char *bufferData = (unsigned char *)node::Buffer::Data(bufferObj);
     unsigned long handle = *reinterpret_cast<unsigned long *>(bufferData);
-    hwnd = (HWND)handle;
+    hwnd = (HWND)(LONG_PTR)handle;
 
-    // Changed Source (electron-show-desktop)
-    HWND nWinHandle = FindWindowEx(NULL, NULL, "Progman", NULL);
-    nWinHandle = FindWindowEx(nWinHandle, NULL, "SHELLDLL_DefView", NULL);
+    LONG_PTR windowStyle = GetWindowLongPtr(hwnd, GWL_STYLE);
+
     bool ok = true;
-    if (nWinHandle == NULL)
+    if (windowStyle == 0)
         ok = false;
     else
-        SetWindowLongPtr(hwnd, -8, (LONG_PTR)nWinHandle);
-
+        ok = SetWindowLongPtr(hwnd, GWL_STYLE, windowStyle & ~WS_MAXIMIZEBOX & ~WS_MINIMIZEBOX) != 0;
+    
     // Original Source (electron-bottom-most)
     // bool ok = SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
 
